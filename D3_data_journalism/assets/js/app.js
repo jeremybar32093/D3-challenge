@@ -100,11 +100,44 @@ d3.csv("./assets/data/data.csv").then(function(demographicData, err) {
                                  .data(demographicData)
                                  .enter()
                                  .append("circle")
+                                 .classed("stateCircle", true)
                                  .attr("cx", d => xLinearScale(d[chosenXAxis]))
                                  .attr("cy", d => yLinearScale(d[chosenYAxis]))
-                                 .attr("r", 20)
-                                 .attr("fill", "pink")
-                                 .attr("opacity", ".5");
+                                 .attr("r", 10);
+                                 
+    // 8f.) Append state abbreviations as data labels to scatter circles
+    var dataLabelsGroup = chartGroup.selectAll("text")
+              .data(demographicData)
+              .enter()
+              .append("text")
+              .text(function(d) {return d.abbr})
+              .attr("dx", d => xLinearScale(d[chosenXAxis]) - 6)
+              .attr("dy", d => yLinearScale(d[chosenYAxis]) + 2)
+              .classed("stateText", true)
+              .attr("font-size", ".5em");
+            //   .attr("font-weight", "bold");
+
+    // 8g.) Add axis labels
+    // x axis - translate to middle of screen, bottom of graph itself plus 20
+    var labelsGroup = chartGroup.append("g")
+    .attr("transform", `translate(${width / 2}, ${height + 20})`);
+
+    var xAxisLabel = labelsGroup.append("text")
+    .attr("x", 0)
+    .attr("y", 20)
+    .attr("value", chosenXAxis) // value to grab for event listener
+    .classed("active", true)
+    .text("In Poverty (%)");
+
+    // append y axis
+    var yAxisLabel = chartGroup.append("text")
+    .attr("transform", "rotate(-90)")
+    .attr("y", 0 - margin.left)
+    .attr("x", 0 - (height / 2))
+    .attr("dy", "1em")
+    .classed("aText active", true)
+    .text("Lacks Healthcare (%)");
+                
 
 }).catch(function(error) {
     console.log(error);

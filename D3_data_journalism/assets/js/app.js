@@ -99,22 +99,45 @@ d3.csv("./assets/data/data.csv").then(function(demographicData, err) {
     var circlesGroup = chartGroup.selectAll("circle")
                                  .data(demographicData)
                                  .enter()
-                                 .append("circle")
-                                 .classed("stateCircle", true)
-                                 .attr("cx", d => xLinearScale(d[chosenXAxis]))
-                                 .attr("cy", d => yLinearScale(d[chosenYAxis]))
-                                 .attr("r", 10);
-                                 
+                                //  .append("circle")
+                                //  .classed("stateCircle", true)
+                                //  .attr("cx", d => xLinearScale(d[chosenXAxis]))
+                                //  .attr("cy", d => yLinearScale(d[chosenYAxis]))
+                                //  .attr("r", 10);
+
+    circlesGroup.append("circle")
+                .classed("stateCircle", true)
+                .attr("cx", d => xLinearScale(d[chosenXAxis]))
+                .attr("cy", d => yLinearScale(d[chosenYAxis]))
+                .attr("r", 10);
+
+    circlesGroup.append("text")
+                .attr("dx", d => xLinearScale(d[chosenXAxis]))
+                .attr("dy", d => yLinearScale(d[chosenYAxis]) + 2)
+                .text(function(d) {
+                    // console.log(d.abbr);
+                    return d.abbr;
+                  })
+                .style("font-size","8px")
+                .classed("stateText", true)
+
     // 8f.) Append state abbreviations as data labels to scatter circles
-    var dataLabelsGroup = chartGroup.selectAll("text")
-              .data(demographicData)
-              .enter()
-              .append("text")
-              .text(function(d) {return d.abbr})
-              .attr("dx", d => xLinearScale(d[chosenXAxis]) - 6)
-              .attr("dy", d => yLinearScale(d[chosenYAxis]) + 2)
-              .classed("stateText", true)
-              .attr("font-size", ".5em");
+    // var dataLabelsGroup = chartGroup.selectAll("text")
+    //           .data(demographicData)
+    //           .enter()
+              // circlesGroup.append("text")
+              // .text(function(d) {
+              //   // console.log(d.abbr);
+              //   return d.abbr;
+              // })
+
+              
+              // .attr("dx", d => xLinearScale(d[chosenXAxis]))
+              // .attr("dy", d => yLinearScale(d[chosenYAxis]))
+              // .classed("stateText", true)
+              
+              // .style("color","red")
+              // .attr("font-size", "10");
             //   .attr("font-weight", "bold");
 
     // 8g.) Add axis labels

@@ -55,11 +55,42 @@ function yScale(demographicData, chosenYAxis) {
     return yLinearScale;
 }
 
+// 8.) Function to re-render x axis after selecting a new variable (see event listener below)
+function renderXAxis(newXScale, xAxis) {
+  var bottomAxis = d3.axisBottom(newXScale);
+
+  xAxis.transition()
+    .duration(1000)
+    .call(bottomAxis);
+
+  return xAxis;
+}
+
+// 9.) Function to re-render y axis after selecting a new variable (see event listender below)
+function renderYAxis(newYScale, yAxis) {
+  var leftAxis = d3.axisLeft(newYScale);
+
+  yAxis.transition()
+       .duration(1000)
+       .call(leftAxis);
+
+  return yAxis;
+
+}
+
+// 10.) Function to update circle positions based on new chosen axis
+function renderCircles(circlesGroup, newXScale, chosenXAxis) {
+
+  circlesGroup.transition()
+    .duration(1000)
+    .attr("cx", d => newXScale(d[chosenXAxis]));
+
+  return circlesGroup;
+}
 
 // 8.) Declare function used for updating circles group with new tooltip
 function updateToolTip(chosenXAxis, circlesGroup) {
   console.log(chosenXAxis);
-  console.log(circlesGroup);
 
   var xLabel;
   var yLabel;
@@ -78,13 +109,21 @@ function updateToolTip(chosenXAxis, circlesGroup) {
   var toolTip = d3.tip()
     .attr("class", "d3-tip")
     .html(function(d) {
-      return (`${d.state}<br>Poverty: ${d.poverty}%<br>Lacks Healthcare: ${d.healthcare}%`);
+      // Dynamically update tooltip display based on chosen axis
+      var tooltip_html_string;
+      if (chosenXAxis === "poverty") {
+        tooltip_html_string = `${d.state}<br>Poverty: ${d.poverty}%<br>Lacks Healthcare: ${d.healthcare}%`;
+      } else if (chosenXAxis === "age") {
+        tooltip_html_string = `${d.state}<br>Age: ${d.age}<br>Lacks Healthcare: ${d.healthcare}%`;
+      } else {
+        tooltip_html_string = `${d.state}<br>Household Income: ${d.age}<br>Lacks Healthcare: ${d.healthcare}%`;
+      }
+      return (tooltip_html_string);
     });
 
   circlesGroup.call(toolTip);
 
   circlesGroup.on("mouseover", function(data) {
-    console.log("mouseover occurred.")
     toolTip.show(data, this);
   })
     // onmouseout event
@@ -126,10 +165,10 @@ d3.csv("./assets/data/data.csv").then(function(demographicData, err) {
 
     // 8d.) Append x and y axis to chart group defined above in step 4
     // x-axis
-    chartGroup.append("g")
-              .classed("x-axis", true)
-              .attr("transform", `translate(0, ${height})`)
-              .call(bottomAxis);
+    var xAxis = chartGroup.append("g")
+                .classed("x-axis", true)
+                .attr("transform", `translate(0, ${height})`)
+                .call(bottomAxis);
     // y axis
     chartGroup.append("g")
               .classed("y-axis", true)
@@ -168,9 +207,23 @@ d3.csv("./assets/data/data.csv").then(function(demographicData, err) {
     var xAxisLabel = labelsGroup.append("text")
     .attr("x", 0)
     .attr("y", 20)
-    .attr("value", chosenXAxis) // value to grab for event listener
+    .attr("value", "poverty") // value to grab for event listener
     .classed("active", true)
     .text("In Poverty (%)");
+
+    var xAxisLabel2 = labelsGroup.append("text")
+    .attr("x", 0)
+    .attr("y", 40)
+    .attr("value", "age")
+    .classed("inactive", true)
+    .text("Age (Median)");
+
+    var xAxisLabel3 = labelsGroup.append("text")
+    .attr("x", 0)
+    .attr("y", 60)
+    .attr("value", "income")
+    .classed("inactive", true)
+    .text("Household Income (Median)");
 
     // append y axis
     var yAxisLabel = chartGroup.append("text")
@@ -178,9 +231,90 @@ d3.csv("./assets/data/data.csv").then(function(demographicData, err) {
     .attr("y", 0 - margin.left)
     .attr("x", 0 - (height / 2))
     .attr("dy", "1em")
+    .attr("value", "lacks_healthcare")
     .classed("aText active", true)
     .text("Lacks Healthcare (%)");
-                
+
+    var yAxisLabel2 = chartGroup.append("text")
+    .attr("transform", "rotate(-90)")
+    .attr("y", 0 - margin.left + 20)
+    .attr("x", 0 - (height / 2))
+    .attr("dy", "1em")
+    .attr("value", "obese")
+    .classed("aText inactive", true)
+    .text("Obese (%)");
+
+    var yAxisLabel3 = chartGroup.append("text")
+    .attr("transform", "rotate(-90)")
+    .attr("y", 0 - margin.left + 40)
+    .attr("x", 0 - (height / 2))
+    .attr("dy", "1em")
+    .attr("value", "smokes")
+    .classed("aText inactive", true)
+    .text("Smokes (%)");
+
+      // x axis labels event listener
+  labelsGroup.selectAll("text")
+  .on("click", function() {
+    // get value of selection
+    var value = d3.select(this).attr("value");
+    if (value !== chosenXAxis) {
+
+      // replaces chosenXAxis with value
+      chosenXAxis = value;
+
+      // console.log(chosenXAxis)
+
+      // functions here found above csv import
+      // updates x scale for new data
+      xLinearScale = xScale(demographicData, chosenXAxis);
+
+      // updates x axis with transition
+      xAxis = renderXAxis(xLinearScale, xAxis);
+
+      // updates circles with new x values
+      circlesGroup = renderCircles(circlesGroup, xLinearScale, chosenXAxis);
+
+      // updates tooltips with new info
+      circlesGroup = updateToolTip(chosenXAxis, circlesGroup);
+
+      // changes classes to change bold text
+      if (chosenXAxis === "poverty") {
+        // xAxisLabel1 = poverty, 2 = age, 3 = household income
+        xAxisLabel
+          .classed("active", true)
+          .classed("inactive", false);
+        xAxisLabel2
+          .classed("active", false)
+          .classed("inactive", true);
+        xAxisLabel3
+          .classed("active", false)
+          .classed("inactive", true);
+      }
+      else if (chosenXAxis === "age") {
+        xAxisLabel
+          .classed("active", false)
+          .classed("inactive", true);
+        xAxisLabel2
+          .classed("active", true)
+          .classed("inactive", false);
+        xAxisLabel3
+          .classed("active", false)
+          .classed("inactive", true);
+      }
+      else {
+        xAxisLabel
+          .classed("active", false)
+          .classed("inactive", true);
+        xAxisLabel2
+          .classed("active", false)
+          .classed("inactive", true);
+        xAxisLabel3
+          .classed("active", true)
+          .classed("inactive", false);
+      }
+    }
+  });    
 
 }).catch(function(error) {
     console.log(error);

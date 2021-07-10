@@ -55,6 +55,46 @@ function yScale(demographicData, chosenYAxis) {
     return yLinearScale;
 }
 
+
+// 8.) Declare function used for updating circles group with new tooltip
+function updateToolTip(chosenXAxis, circlesGroup) {
+  console.log(chosenXAxis);
+  console.log(circlesGroup);
+
+  var xLabel;
+  var yLabel;
+
+  // if (chosenXAxis === "hair_length") {
+  //   label = "Hair Length:";
+  // }
+  // else {
+  //   label = "# of Albums:";
+  // }
+
+  //Add IF logic for selecting multiple axes
+  xLabel = 'In Povery (%)';
+  yLabel = 'Lacks Healthcare (%)';
+
+  var toolTip = d3.tip()
+    .attr("class", "d3-tip")
+    .html(function(d) {
+      return (`${d.state}<br>Poverty: ${d.poverty}%<br>Lacks Healthcare: ${d.healthcare}%`);
+    });
+
+  circlesGroup.call(toolTip);
+
+  circlesGroup.on("mouseover", function(data) {
+    console.log("mouseover occurred.")
+    toolTip.show(data, this);
+  })
+    // onmouseout event
+    .on("mouseout", function(data, index) {
+      toolTip.hide(data);
+    });
+
+  return circlesGroup;
+}
+
 // 8.) Create function to read in data.csv file
 d3.csv("./assets/data/data.csv").then(function(demographicData, err) {
     if (err) throw err;
@@ -99,11 +139,6 @@ d3.csv("./assets/data/data.csv").then(function(demographicData, err) {
     var circlesGroup = chartGroup.selectAll("circle")
                                  .data(demographicData)
                                  .enter()
-                                //  .append("circle")
-                                //  .classed("stateCircle", true)
-                                //  .attr("cx", d => xLinearScale(d[chosenXAxis]))
-                                //  .attr("cy", d => yLinearScale(d[chosenYAxis]))
-                                //  .attr("r", 10);
 
     circlesGroup.append("circle")
                 .classed("stateCircle", true)
@@ -120,25 +155,10 @@ d3.csv("./assets/data/data.csv").then(function(demographicData, err) {
                   })
                 .style("font-size","8px")
                 .classed("stateText", true)
-
-    // 8f.) Append state abbreviations as data labels to scatter circles
-    // var dataLabelsGroup = chartGroup.selectAll("text")
-    //           .data(demographicData)
-    //           .enter()
-              // circlesGroup.append("text")
-              // .text(function(d) {
-              //   // console.log(d.abbr);
-              //   return d.abbr;
-              // })
-
-              
-              // .attr("dx", d => xLinearScale(d[chosenXAxis]))
-              // .attr("dy", d => yLinearScale(d[chosenYAxis]))
-              // .classed("stateText", true)
-              
-              // .style("color","red")
-              // .attr("font-size", "10");
-            //   .attr("font-weight", "bold");
+    
+    // 8f.) Logic to add tooltip - for some reason, had to recreate/rebind circlesGroup for it to work properly
+    var circlesGroup = chartGroup.selectAll("circle").data(demographicData);
+    circlesGroup = updateToolTip(chosenXAxis, circlesGroup);
 
     // 8g.) Add axis labels
     // x axis - translate to middle of screen, bottom of graph itself plus 20

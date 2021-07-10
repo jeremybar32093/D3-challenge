@@ -82,29 +82,26 @@ function renderYAxis(newYScale, yAxis) {
 function renderCircles(circlesGroup, newXScale, chosenXAxis) {
 
   circlesGroup.transition()
-    .duration(1000)
-    .attr("cx", d => newXScale(d[chosenXAxis]));
+    .attr("cx", d => newXScale(d[chosenXAxis]))
+    .selectAll("text")
+    .attr("dx", d => newXScale(d[chosenXAxis]))
+    .duration(1000);
+
+    // Update x location of each state text label individually
+    d3.selectAll("#data-label").each(function() {
+      d3.select(this)
+        .transition()
+        .attr("dx", function(d) {
+          return newXScale(d[chosenXAxis])
+        })
+        .duration(1000)
+    });
 
   return circlesGroup;
 }
 
 // 8.) Declare function used for updating circles group with new tooltip
 function updateToolTip(chosenXAxis, circlesGroup) {
-  console.log(chosenXAxis);
-
-  var xLabel;
-  var yLabel;
-
-  // if (chosenXAxis === "hair_length") {
-  //   label = "Hair Length:";
-  // }
-  // else {
-  //   label = "# of Albums:";
-  // }
-
-  //Add IF logic for selecting multiple axes
-  xLabel = 'In Povery (%)';
-  yLabel = 'Lacks Healthcare (%)';
 
   var toolTip = d3.tip()
     .attr("class", "d3-tip")
@@ -186,6 +183,7 @@ d3.csv("./assets/data/data.csv").then(function(demographicData, err) {
                 .attr("r", 10);
 
     circlesGroup.append("text")
+                .attr("id","data-label")
                 .attr("dx", d => xLinearScale(d[chosenXAxis]))
                 .attr("dy", d => yLinearScale(d[chosenYAxis]) + 2)
                 .text(function(d) {
@@ -197,7 +195,7 @@ d3.csv("./assets/data/data.csv").then(function(demographicData, err) {
     
     // 8f.) Logic to add tooltip - for some reason, had to recreate/rebind circlesGroup for it to work properly
     var circlesGroup = chartGroup.selectAll("circle").data(demographicData);
-    circlesGroup = updateToolTip(chosenXAxis, circlesGroup);
+    updateToolTip(chosenXAxis, circlesGroup);
 
     // 8g.) Add axis labels
     // x axis - translate to middle of screen, bottom of graph itself plus 20

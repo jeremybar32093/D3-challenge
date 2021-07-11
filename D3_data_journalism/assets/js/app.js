@@ -123,22 +123,52 @@ function renderCirclesYAxis(circlesGroup, newYScale, chosenYAxis) {
 }
 
 // 8.) Declare function used for updating circles group with new tooltip
-function updateToolTip(chosenXAxis, circlesGroup) {
+function updateToolTip(chosenXAxis, chosenYAxis, circlesGroup) {
+
+  // console.log(chosenXAxis);
+  // console.log(chosenYAxis);
+
 
   var toolTip = d3.tip()
     .attr("class", "d3-tip")
     .html(function(d) {
-      // Dynamically update tooltip display based on chosen axis
-      var tooltip_html_string;
-      if (chosenXAxis === "poverty") {
-        tooltip_html_string = `${d.state}<br>Poverty: ${d.poverty}%<br>Lacks Healthcare: ${d.healthcare}%`;
-      } else if (chosenXAxis === "age") {
-        tooltip_html_string = `${d.state}<br>Age: ${d.age}<br>Lacks Healthcare: ${d.healthcare}%`;
-      } else {
-        tooltip_html_string = `${d.state}<br>Household Income: ${d.age}<br>Lacks Healthcare: ${d.healthcare}%`;
-      }
-      return (tooltip_html_string);
+        // Dynamically update tooltip display based on chosen axis
+        var tooltip_html_string;
+        var tooltip_x_label;
+        var tooltip_y_label;
+        // construct initial portion of tooltip based on chosen x label
+        if (chosenXAxis === "poverty") {
+          tooltip_x_label = `<br>Poverty: ${d.poverty}%`; 
+        } else if (chosenXAxis === "age") {
+          tooltip_x_label = `<br>Age: ${d.age}`;
+        } else {
+          tooltip_x_label = `<br>Household Income: ${d.income}`;
+        }
+
+        // construct second portion of tooltip based on chosen y label
+        if (chosenYAxis === "healthcare") {
+          tooltip_y_label = `<br>Lacks Healthcare: ${d.healthcare}%`;
+        } else if (chosenYAxis === "obesity") {
+          tooltip_y_label = `<br>Obese: ${d.obesity}%`;
+        } else {
+          tooltip_y_label = `<br>Smokes: ${d.smokes}%`;
+        }
+
+        // construct full tooltip
+        tooltip_html_string = `${d.state}${tooltip_x_label}${tooltip_y_label}`;
+        return tooltip_html_string;
     });
+
+
+
+  //       tooltip_html_string = `${d.state}<br>Poverty: ${d.poverty}%<br>Lacks Healthcare: ${d.healthcare}%`;
+  //     } else if (chosenXAxis === "age") {
+  //       tooltip_html_string = `${d.state}<br>Age: ${d.age}<br>Lacks Healthcare: ${d.healthcare}%`;
+  //     } else {
+  //       tooltip_html_string = `${d.state}<br>Household Income: ${d.age}<br>Lacks Healthcare: ${d.healthcare}%`;
+  //     }
+  //     return (tooltip_html_string);
+  //   });
 
   circlesGroup.call(toolTip);
 
@@ -151,7 +181,7 @@ function updateToolTip(chosenXAxis, circlesGroup) {
       toolTip.hide(data);
     });
 
-  return circlesGroup;
+   return circlesGroup;
 }
 
 // 8.) Create function to read in data.csv file
@@ -218,7 +248,7 @@ d3.csv("./assets/data/data.csv").then(function(demographicData, err) {
     
     // 8f.) Logic to add tooltip - for some reason, had to recreate/rebind circlesGroup for it to work properly
     var circlesGroup = chartGroup.selectAll("circle").data(demographicData);
-    updateToolTip(chosenXAxis, circlesGroup);
+    updateToolTip(chosenXAxis, chosenYAxis, circlesGroup);
 
     // 8g.) Add axis labels
     // x axis - translate to middle of screen, bottom of graph itself plus 20
@@ -299,7 +329,7 @@ d3.csv("./assets/data/data.csv").then(function(demographicData, err) {
       circlesGroup = renderCircles(circlesGroup, xLinearScale, chosenXAxis);
 
       // updates tooltips with new info
-      circlesGroup = updateToolTip(chosenXAxis, circlesGroup);
+      // circlesGroup = updateToolTip(chosenXAxis, circlesGroup);
 
       // changes classes to change bold text
       if (chosenXAxis === "poverty") {
@@ -337,18 +367,19 @@ d3.csv("./assets/data/data.csv").then(function(demographicData, err) {
           .classed("inactive", false);
       }
     }
+
+    circlesGroup = updateToolTip(chosenXAxis, chosenYAxis, circlesGroup);
+
   }); 
   
   // y-axis label event listener
   chartGroup.selectAll(".y-axis-label")
   .on("click", function () {
-    console.log("y-axis label clicked")
     // get value of selection
     var value = d3.select(this).attr("value");
     if (value !== chosenYAxis) {
       // replaces chosenYAxis with value
       chosenYAxis = value;
-      console.log(chosenYAxis);
       // functions here found above csv import
       // updates y scale for new data
       yLinearScale = yScale(demographicData, chosenYAxis);
@@ -397,11 +428,11 @@ d3.csv("./assets/data/data.csv").then(function(demographicData, err) {
 
     };
 
-
-
-
+    circlesGroup = updateToolTip(chosenXAxis, chosenYAxis, circlesGroup);
 
   });
+
+  
 
 }).catch(function(error) {
     console.log(error);
